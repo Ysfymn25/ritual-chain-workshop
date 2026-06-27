@@ -1,0 +1,52 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_24-f26d69ec85d3e787894f03e3744245d9fd2a4cb0",
+  "solcVersion": "0.8.24",
+  "solcLongVersion": "0.8.24+commit.e11b9ed9",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.9.0"
+  },
+  "userSourceNameMap": {
+    "contracts/RitualAuditor.sol": "project/contracts/RitualAuditor.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "shanghai",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/RitualAuditor.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\nimport {PrecompileConsumer} from \"./utils/PrecompileConsumer.sol\";\n\n/// @title  RitualAuditor — on-chain AI smart-contract security auditor\n/// @notice A user submits a Solidity snippet; the contract forwards it to\n///         Ritual's LLM inference precompile (0x0802), which runs the model\n///         inside a TEE executor and returns a security report in the SAME\n///         transaction. The findings are stored on-chain, so an audit becomes\n///         a permanent, verifiable artifact anyone can read back.\n/// @dev    Usage fees are charged in the native (Ritual) token: `requestAudit`\n///         is payable, requires at least `auditFee`, and forwards the paid\n///         amount to the fixed TREASURY wallet. The owner can adjust the fee.\ncontract RitualAuditor is PrecompileConsumer {\n    /// @notice Hard cap so a single audit request stays within gas/payload limits.\n    uint256 public constant MAX_CODE_LENGTH = 12_000;\n\n    /// @notice All usage fees (native Ritual token) are forwarded here.\n    address public constant TREASURY =\n        0x1BFe607AD53Ca8B2b638630865466E7F386a9b80;\n\n    /// @notice Can update `auditFee`. Set to the deployer at construction.\n    address public owner;\n\n    /// @notice Minimum fee per audit, denominated in wei of the native token.\n    uint256 public auditFee;\n\n    struct Audit {\n        address requester;\n        string code; // the Solidity snippet that was audited\n        string report; // the AI's findings (model text, usually JSON)\n        bool completed;\n        uint256 timestamp;\n    }\n\n    /// @dev Matches the trailing tuple the LLM precompile returns in its response.\n    struct ConvoHistory {\n        string storageType;\n        string path;\n        string secretsName;\n    }\n\n    uint256 public nextAuditId;\n    mapping(uint256 => Audit) public audits;\n\n    event AuditRequested(uint256 indexed auditId, address indexed requester);\n    event AuditCompleted(uint256 indexed auditId, string report);\n    event FeePaid(uint256 indexed auditId, address indexed payer, uint256 amount);\n    event AuditFeeUpdated(uint256 newFee);\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\n\n    modifier onlyOwner() {\n        require(msg.sender == owner, \"not owner\");\n        _;\n    }\n\n    /// @param initialFee  Starting per-audit fee in wei of the native token.\n    /// @param initialOwner Address that owns the contract (can re-price audits\n    ///        and transfer ownership). Pass the zero address to default to the\n    ///        deployer. This lets a throwaway key deploy while a different\n    ///        wallet (e.g. your own) ends up as the real owner.\n    constructor(uint256 initialFee, address initialOwner) {\n        owner = initialOwner == address(0) ? msg.sender : initialOwner;\n        auditFee = initialFee;\n        emit OwnershipTransferred(address(0), owner);\n    }\n\n    /// @notice Owner can re-price audits as inference costs / demand change.\n    function setAuditFee(uint256 newFee) external onlyOwner {\n        auditFee = newFee;\n        emit AuditFeeUpdated(newFee);\n    }\n\n    /// @notice Hand ownership to another wallet.\n    function transferOwnership(address newOwner) external onlyOwner {\n        require(newOwner != address(0), \"zero owner\");\n        emit OwnershipTransferred(owner, newOwner);\n        owner = newOwner;\n    }\n\n    /// @notice Submit a Solidity snippet for an AI security audit.\n    /// @dev    Pay at least `auditFee` in the native token; it is forwarded to\n    ///         TREASURY. The LLM precompile runs the model and returns findings\n    ///         in this same transaction.\n    /// @param code      The source to audit (also stored on-chain for the record).\n    /// @param llmInput  ABI-encoded LLM request built off-chain; it embeds `code`\n    ///                  and the auditor system prompt and selects the model.\n    /// @return auditId  Id of the stored audit; its `report` holds the findings.\n    function requestAudit(string calldata code, bytes calldata llmInput)\n        external\n        payable\n        returns (uint256 auditId)\n    {\n        require(bytes(code).length > 0, \"empty code\");\n        require(bytes(code).length <= MAX_CODE_LENGTH, \"code too long\");\n        require(msg.value >= auditFee, \"insufficient fee\");\n\n        auditId = nextAuditId++;\n\n        Audit storage a = audits[auditId];\n        a.requester = msg.sender;\n        a.code = code;\n        a.timestamp = block.timestamp;\n\n        emit AuditRequested(auditId, msg.sender);\n\n        // Forward the usage fee (native Ritual token) to the treasury wallet.\n        if (msg.value > 0) {\n            (bool paid, ) = payable(TREASURY).call{value: msg.value}(\"\");\n            require(paid, \"fee transfer failed\");\n            emit FeePaid(auditId, msg.sender, msg.value);\n        }\n\n        // Call the LLM inference precompile. PrecompileConsumer unwraps the\n        // short-running async envelope and returns the actual encoded output.\n        bytes memory output = _executePrecompile(LLM_INFERENCE_PRECOMPILE, llmInput);\n\n        (\n            bool hasError,\n            bytes memory completionData,\n            ,\n            string memory errorMessage,\n\n        ) = abi.decode(output, (bool, bytes, bytes, string, ConvoHistory));\n\n        require(!hasError, errorMessage);\n\n        a.report = string(completionData);\n        a.completed = true;\n\n        emit AuditCompleted(auditId, a.report);\n    }\n\n    function getAudit(uint256 auditId)\n        external\n        view\n        returns (\n            address requester,\n            string memory code,\n            string memory report,\n            bool completed,\n            uint256 timestamp\n        )\n    {\n        Audit storage a = audits[auditId];\n        return (a.requester, a.code, a.report, a.completed, a.timestamp);\n    }\n}\n"
+      },
+      "project/contracts/utils/PrecompileConsumer.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.20;\r\n\r\nabstract contract PrecompileConsumer {\r\n    // Synchronous precompiles\r\n    address internal constant ONNX_PRECOMPILE = address(0x0800);\r\n    address internal constant JQ_PRECOMPILE = address(0x0803);\r\n    address internal constant ED25519_PRECOMPILE = address(0x0009);\r\n    address internal constant SECP256R1_PRECOMPILE = address(0x0100);\r\n    address internal constant TX_HASH_PRECOMPILE = address(0x0830);\r\n\r\n    // Short-running async precompiles\r\n    address internal constant HTTP_CALL_PRECOMPILE = address(0x0801);\r\n    address internal constant LLM_INFERENCE_PRECOMPILE = address(0x0802);\r\n    address internal constant DKMS_PRECOMPILE = address(0x081B);\r\n\r\n    // Long-running async precompiles\r\n    address internal constant LONG_HTTP_PRECOMPILE = address(0x0805);\r\n    address internal constant ZK_TWO_PHASE_PRECOMPILE = address(0x0806);\r\n    address internal constant FHE_PRECOMPILE = address(0x0807);\r\n    address internal constant SOVEREIGN_AGENT_PRECOMPILE = address(0x080C);\r\n    address internal constant IMAGE_CALL_PRECOMPILE = address(0x0818);\r\n    address internal constant AUDIO_CALL_PRECOMPILE = address(0x0819);\r\n    address internal constant VIDEO_CALL_PRECOMPILE = address(0x081A);\r\n    address internal constant PERSISTENT_AGENT_PRECOMPILE = address(0x0820);\r\n\r\n    // System contracts\r\n    address internal constant ASYNC_DELIVERY =\r\n        0x5A16214fF555848411544b005f7Ac063742f39F6;\r\n\r\n    function _executePrecompile(\r\n        address precompile,\r\n        bytes memory input\r\n    ) internal returns (bytes memory) {\r\n        (bool success, bytes memory rawOutput) = precompile.call(input);\r\n\r\n        if (!success) {\r\n            assembly {\r\n                revert(add(rawOutput, 32), mload(rawOutput))\r\n            }\r\n        }\r\n\r\n        // Short-running async precompiles return:\r\n        // abi.encode(bytes simmedInput, bytes actualOutput)\r\n        if (\r\n            precompile == HTTP_CALL_PRECOMPILE ||\r\n            precompile == LLM_INFERENCE_PRECOMPILE ||\r\n            precompile == DKMS_PRECOMPILE\r\n        ) {\r\n            (, bytes memory actualOutput) = abi.decode(\r\n                rawOutput,\r\n                (bytes, bytes)\r\n            );\r\n            return actualOutput;\r\n        }\r\n\r\n        return rawOutput;\r\n    }\r\n\r\n    function callSECP256R1SigVer(\r\n        bytes memory input\r\n    ) internal view returns (bytes memory) {\r\n        (bool success, bytes memory result) = SECP256R1_PRECOMPILE.staticcall(\r\n            input\r\n        );\r\n\r\n        require(success, \"SECP256R1 precompile failed\");\r\n        return result;\r\n    }\r\n}\r\n"
+      }
+    }
+  }
+}

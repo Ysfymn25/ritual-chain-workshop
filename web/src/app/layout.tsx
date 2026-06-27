@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Bounty Judge",
+  title: "Ritual Audit — On-chain AI smart-contract auditor",
   description:
-    "Submit answers to a bounty. After the deadline, Ritual AI ranks all submissions. The bounty owner finalizes the winner.",
+    "Paste a Solidity contract. Ritual's on-chain AI analyzes it for vulnerabilities and writes the security report on-chain.",
 };
 
 export default function RootLayout({
