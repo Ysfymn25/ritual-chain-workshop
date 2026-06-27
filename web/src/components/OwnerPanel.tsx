@@ -10,7 +10,7 @@ import { Card, CardHeader, CardBody, Field, Input, Button, TxStatus, Badge } fro
 
 const explorerBase = ritualChain.blockExplorers?.default.url;
 
-/** Fee management — only rendered for the contract owner. */
+/** Fee management - only rendered for the contract owner. */
 export function OwnerPanel() {
   const { address } = useAccount();
   const [newFee, setNewFee] = useState("");
@@ -65,7 +65,7 @@ export function OwnerPanel() {
     <Card>
       <CardHeader
         title="Owner controls"
-        subtitle="Re-price audits. Fees are paid to your treasury wallet."
+        subtitle="Update the audit fee. Fees go to your treasury wallet."
         action={<Badge tone="indigo">You are the owner</Badge>}
       />
       <CardBody>

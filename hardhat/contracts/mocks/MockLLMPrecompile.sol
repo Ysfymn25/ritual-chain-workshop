@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title  MockLLMPrecompile — test-only stand-in for Ritual's LLM precompile.
+/// @title  MockLLMPrecompile - test-only stand-in for Ritual's LLM precompile.
 /// @notice Ritual's real inference precompile lives at 0x0802 and only exists on
 ///         Ritual chain. For local end-to-end testing we deploy this mock and
 ///         `setCode` it onto 0x0802, so `RitualAuditor.requestAudit` can run its

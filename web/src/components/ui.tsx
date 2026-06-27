@@ -97,7 +97,7 @@ export function Button({
 }: ButtonProps) {
   const styles: Record<string, string> = {
     primary:
-      "bg-indigo-500 text-white hover:bg-indigo-400 disabled:bg-indigo-500/40",
+      "bg-green-500 text-zinc-950 font-semibold hover:bg-green-400 disabled:bg-green-500/40 disabled:text-zinc-950/60",
     secondary:
       "bg-white/10 text-zinc-100 hover:bg-white/15 disabled:bg-white/5",
     ghost: "bg-transparent text-zinc-300 hover:bg-white/5",
@@ -135,7 +135,7 @@ export function Field({
 }
 
 const inputBase =
-  "w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-indigo-400/60 focus:outline-none focus:ring-1 focus:ring-indigo-400/40";
+  "w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-green-400/60 focus:outline-none focus:ring-1 focus:ring-green-400/40";
 
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${inputBase} ${props.className ?? ""}`} />;
@@ -157,7 +157,7 @@ export function Textarea(
 const TX_LABEL: Record<TxState, string> = {
   idle: "",
   wallet: "Waiting for wallet…",
-  pending: "Confirming on-chain…",
+  pending: "Confirming onchain…",
   confirmed: "Confirmed",
   failed: "Failed",
 };
@@ -193,7 +193,7 @@ export function TxStatus({
           href={`${explorerBase}/tx/${hash}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2"
+          className="text-green-400 hover:text-green-300 underline underline-offset-2"
         >
           View tx
         </a>

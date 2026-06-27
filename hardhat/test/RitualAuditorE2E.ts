@@ -1,8 +1,8 @@
-// RitualAuditor — FULL end-to-end test with a mocked LLM precompile.
+// RitualAuditor - FULL end-to-end test with a mocked LLM precompile.
 //
 // Ritual's LLM precompile (0x0802) only exists on Ritual chain. Here we deploy
 // MockLLMPrecompile, copy its runtime code onto 0x0802 with `setCode`, and then
-// run the complete requestAudit flow locally — proving fee collection, treasury
+// run the complete requestAudit flow locally - proving fee collection, treasury
 // payout, the precompile round-trip, and on-chain report storage all work. On
 // real Ritual the SAME contract simply calls the real model instead of the mock.
 import { describe, it } from "node:test";
@@ -16,7 +16,7 @@ const LLM_PRECOMPILE = "0x0000000000000000000000000000000000000802";
 const TREASURY = "0x1BFe607AD53Ca8B2b638630865466E7F386a9b80";
 const FEE = parseEther("0.001");
 
-describe("RitualAuditor — full flow (mocked LLM precompile)", () => {
+describe("RitualAuditor - full flow (mocked LLM precompile)", () => {
   it("collects the fee, pays the treasury, and stores the AI report", async () => {
     const publicClient = await viem.getPublicClient();
     const [, user] = await viem.getWalletClients();

@@ -1,7 +1,7 @@
-// RitualAuditor — fee + access-control tests (Hardhat 3 + node:test + viem).
+// RitualAuditor - fee + access-control tests (Hardhat 3 + node:test + viem).
 //
 // Note: the full requestAudit happy path calls the LLM precompile (0x0802),
-// which only exists on Ritual chain — it cannot run on the local EDR network.
+// which only exists on Ritual chain - it cannot run on the local EDR network.
 // These tests cover everything that is checked BEFORE the precompile call:
 // constructor state, fee re-pricing (owner-gated), and the input/fee guards
 // that revert early. That is exactly the money-handling logic worth pinning down.
@@ -25,7 +25,7 @@ async function deploy() {
   return { auditor, wallets };
 }
 
-describe("RitualAuditor — fees & access control", () => {
+describe("RitualAuditor - fees & access control", () => {
   it("sets owner, fee and the fixed treasury at construction", async () => {
     const { auditor, wallets } = await deploy();
     const [deployer] = wallets;

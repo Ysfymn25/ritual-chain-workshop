@@ -4,8 +4,8 @@
 //   npx hardhat ignition deploy ignition/modules/RitualAuditor.ts --network ritual
 //
 // Constructor args:
-//   initialFee    — per-audit fee in wei of the native Ritual token (default 0.001)
-//   initialOwner  — the wallet that owns the contract (can re-price / transfer).
+//   initialFee - per-audit fee in wei of the native Ritual token (default 0.001)
+//   initialOwner - the wallet that owns the contract (can re-price / transfer).
 //                   Defaults to the user's MetaMask, so a throwaway key can do the
 //                   deploy while ownership lands on the real wallet.
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";

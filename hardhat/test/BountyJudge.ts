@@ -1,11 +1,11 @@
-// BountyJudge — commit-reveal test suite (Hardhat 3 + node:test + viem).
+// BountyJudge - commit-reveal test suite (Hardhat 3 + node:test + viem).
 //
 // Run: npx hardhat test
 //
 // Covers every reveal-path case the homework asks for: correct reveal, wrong
 // salt, tampered answer, foreign reveal, early/late reveal, double commit,
 // double reveal, unauthorized judging, premature judging, finalizing an
-// unrevealed winner, and out-of-range winner index — plus the full happy path.
+// unrevealed winner, and out-of-range winner index - plus the full happy path.
 import { describe, it, before } from "node:test";
 import assert from "node:assert/strict";
 import { network } from "hardhat";
@@ -61,7 +61,7 @@ async function createBounty(bounty: any, creatorAccount: any) {
   return { bountyId: 0n, submissionDeadline, revealDeadline };
 }
 
-describe("BountyJudge — commit-reveal lifecycle", () => {
+describe("BountyJudge - commit-reveal lifecycle", () => {
   it("happy path: commit -> reveal -> judge -> finalize -> winner readable", async () => {
     const { bounty, wallets } = await networkHelpers.loadFixture(deployFixture);
     const [creator, alice, bob] = wallets;

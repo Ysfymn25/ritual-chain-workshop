@@ -21,7 +21,7 @@ export function AuditReportDisplay({ report }: { report: string }) {
     <Card>
       <CardHeader
         title="AI security audit"
-        subtitle="Produced on-chain by the Ritual LLM precompile."
+        subtitle="Produced on chain by the Ritual LLM precompile."
         action={
           parsed ? (
             <Badge tone={SEVERITY_TONE[parsed.severity]}>

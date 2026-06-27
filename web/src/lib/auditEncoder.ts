@@ -1,7 +1,7 @@
 import { encodeAbiParameters, parseAbiParameters, type Address } from "viem";
 
 /**
- * Ritual LLM request encoding for the auditor — mirrors the workshop's
+ * Ritual LLM request encoding for the auditor - mirrors the workshop's
  * `ritualLlm.ts` tuple layout (the LLM precompile `0x0802` request format).
  *
  * ⚠️ The exact Ritual LLM precompile ABI is not yet publicly pinned down; this
@@ -58,7 +58,7 @@ export function buildAuditLlmInput(code: string): `0x${string}` {
     "", // serviceTier
     "", // stopJson
     false, // stream
-    100n, // temperature (0.1 × 1000) — low = consistent audits
+    100n, // temperature (0.1 × 1000) - low = consistent audits
     "0x", // toolChoiceData
     "0x", // toolsData
     -1n, // topLogprobs

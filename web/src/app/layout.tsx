@@ -14,9 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ritual Audit — On-chain AI smart-contract auditor",
+  title: "Ritual Audit - On-chain AI smart-contract auditor",
   description:
-    "Paste a Solidity contract. Ritual's on-chain AI analyzes it for vulnerabilities and writes the security report on-chain.",
+    "Paste a Solidity contract. Ritual's on chain AI analyzes it for vulnerabilities and writes the security report on chain.",
+  icons: { icon: "/ritual-mark.svg" },
 };
 
 export default function RootLayout({

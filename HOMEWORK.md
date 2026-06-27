@@ -1,4 +1,4 @@
-# Bounty Judge — Commit-Reveal Submission
+# Bounty Judge - Commit-Reveal Submission
 
 A bounty system where answers stay hidden until judging, so nobody can copy and
 "improve on" a rival's submission before the deadline. This covers the **Required
@@ -7,10 +7,10 @@ Track** (commit-reveal on any EVM chain) and an **architecture note** for the
 
 ## Files
 
-- `contracts/BountyJudge.sol` — the commit-reveal contract.
-- `test/BountyJudge.ts` — tests for every reveal case (15 cases, all passing).
-- `ignition/modules/BountyJudge.ts` — Hardhat Ignition deployment module.
-- This README — lifecycle, test plan, architecture note, reflection.
+- `contracts/BountyJudge.sol` - the commit-reveal contract.
+- `test/BountyJudge.ts` - tests for every reveal case (15 cases, all passing).
+- `ignition/modules/BountyJudge.ts` - Hardhat Ignition deployment module.
+- This README - lifecycle, test plan, architecture note, reflection.
 
 ## How to run
 
@@ -49,11 +49,11 @@ RPC `https://rpc.ritualfoundation.org`); deploy with `--network ritual`.
 The contract enforces four ordered phases per bounty, gated by two timestamps
 (`submissionDeadline`, `revealDeadline`).
 
-1. **Create** — `createBounty(prompt, submissionDeadline, revealDeadline)`
+1. **Create** - `createBounty(prompt, submissionDeadline, revealDeadline)`
    The caller becomes the judging authority. Deadlines must be strictly increasing
    and in the future.
 
-2. **Submit (hidden)** — `submitCommitment(bountyId, commitment)`
+2. **Submit (hidden)** - `submitCommitment(bountyId, commitment)`
    Accepted only **before** `submissionDeadline`. Participants post **only** a
    hash. The answer is never on-chain in this phase.
 
@@ -64,18 +64,18 @@ The contract enforces four ordered phases per bounty, gated by two timestamps
    - `bountyId` stops a commitment made for one bounty being reused in another.
    - Use the `computeCommitment(...)` view (via `eth_call`) to build the hash off-chain.
 
-3. **Reveal** — `revealAnswer(bountyId, answer, salt)`
+3. **Reveal** - `revealAnswer(bountyId, answer, salt)`
    Accepted only in `[submissionDeadline, revealDeadline)`. The contract recomputes
    the hash and reverts unless it matches the stored commitment. Only matching
    reveals are marked `revealed = true` and become eligible for judging.
 
-4. **Judge** — `judgeAll(bountyId, llmInput)`
+4. **Judge** - `judgeAll(bountyId, llmInput)`
    Creator-only, after `revealDeadline`. `llmInput` is the exact byte payload of all
    revealed answers fed to the LLM in **one batch call** (not one call per answer).
    The contract counts revealed entries and stores `keccak256(llmInput)` so the
    judging input is auditable and tamper-evident.
 
-5. **Finalize** — `finalizeWinner(bountyId, winnerIndex)`
+5. **Finalize** - `finalizeWinner(bountyId, winnerIndex)`
    Creator-only, after judging. `winnerIndex` points into the public `participants`
    array; the winner must have revealed. Emits `WinnerFinalized`.
 
@@ -104,7 +104,7 @@ The contract enforces four ordered phases per bounty, gated by two timestamps
 | 15 | Finalize before judging | revert `NotJudged` |
 
 A useful manual check: during phase 2, call `getSubmission(bountyId, addr)` and
-confirm `answer == ""` and only the hash is visible — proof that nothing leaks early.
+confirm `answer == ""` and only the hash is visible - proof that nothing leaks early.
 
 ---
 
@@ -118,19 +118,18 @@ confirm `answer == ""` and only the hash is visible — proof that nothing leaks
   revealed answers, runs the LLM once over the batch, and the creator records the
   decision via `judgeAll` + `finalizeWinner`.
 - **Trust model:** the chain guarantees the *process* (hidden until reveal, valid
-  reveals only, deadlines enforced). It does **not** hide answers after reveal —
-  in this track, answers become public, which is what makes judging auditable. The
+  reveals only, deadlines enforced). It does **not** hide answers after reveal - in this track, answers become public, which is what makes judging auditable. The
   weak point is that the off-chain judge is trusted to run the model honestly; the
   stored `judgeInputHash` only proves *what* was judged, not that the model ran.
 
 ### Advanced track (Ritual TEE-backed)
 
 Goal: answers stay **encrypted** even after the deadline, and only become plaintext
-**inside a TEE** at the judging step — closing the gap above.
+**inside a TEE** at the judging step - closing the gap above.
 
 - **Where plaintext exists:** (a) briefly in the participant's own browser when they
   write the answer, and (b) inside the TEE enclave during the single batch-judging
-  call. Nowhere else — not on-chain, not on the creator's server.
+  call. Nowhere else - not on-chain, not on the creator's server.
 - **On-chain:** the commitment hash **and** the answer encrypted to a key the TEE
   controls (ECIES / Ritual's secrets mechanism, e.g. a `SECRET_NAME` reference that
   is substituted with the decrypted value only inside the enclave). Plus deadlines,
@@ -141,7 +140,7 @@ Goal: answers stay **encrypted** even after the deadline, and only become plaint
   result on-chain in the same async flow. Because it is one batched call (not one
   call per answer), the model can compare submissions directly and cost stays bounded.
 - **Why it's stronger:** the prompt/answer never leak to the operator, and the
-  attestation ties the output to the exact request — so "the right model judged the
+  attestation ties the output to the exact request - so "the right model judged the
   right inputs" is verifiable, not merely trusted.
 
 Relevant Ritual pieces: LLM precompile `0x0802` (batch judging), the secrets/ECIES
@@ -158,17 +157,17 @@ versus by a human in a bounty system?**
 In a fair bounty system the prompt, the rules, the deadlines, the participant list,
 and the commitment hashes should all be public, because they let anyone verify the
 process was not tampered with. The answers themselves must stay hidden during the
-submission phase — only their commitment hashes live on-chain — so that no one can
+submission phase - only their commitment hashes live on-chain - so that no one can
 read and improve on a rival's work before the deadline. After the deadline the
 answers become checkable, either by going public (basic track) or by being decrypted
 only inside a TEE (advanced track), which is what makes judging auditable. The
-mechanical, objective parts — verifying a reveal matches its commitment, enforcing
-deadlines, and tallying who is eligible — should be decided by the contract, because
+mechanical, objective parts - verifying a reveal matches its commitment, enforcing
+deadlines, and tallying who is eligible - should be decided by the contract, because
 code is deterministic and trustless. The subjective quality comparison across many
 answers is where an AI judge adds value, since it can score a whole batch
 consistently against a rubric without favoritism or fatigue. A human, however, should
 still own the final outcome: defining the rubric, handling edge cases and disputes,
 and confirming or overriding the AI's recommendation before any reward moves. The
 healthiest split is therefore that the chain guarantees integrity, the AI proposes a
-ranking, and a human ratifies the result — keeping the system both scalable and
+ranking, and a human ratifies the result - keeping the system both scalable and
 accountable.

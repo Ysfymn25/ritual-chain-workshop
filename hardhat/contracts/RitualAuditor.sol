@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {PrecompileConsumer} from "./utils/PrecompileConsumer.sol";
 
-/// @title  RitualAuditor — on-chain AI smart-contract security auditor
+/// @title  RitualAuditor - on-chain AI smart-contract security auditor
 /// @notice A user submits a Solidity snippet; the contract forwards it to
 ///         Ritual's LLM inference precompile (0x0802), which runs the model
 ///         inside a TEE executor and returns a security report in the SAME

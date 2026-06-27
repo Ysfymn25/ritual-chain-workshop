@@ -10,6 +10,7 @@ import { useWriteTx } from "@/hooks/useWriteTx";
 import { useRitualWalletStatus } from "@/hooks/useRitualWalletStatus";
 import { RitualWalletPanel } from "@/components/RitualWalletPanel";
 import { AuditReportDisplay } from "@/components/AuditReportDisplay";
+import { RitualMark } from "@/components/RitualMark";
 import {
   Card,
   CardHeader,
@@ -17,7 +18,6 @@ import {
   Field,
   Textarea,
   Button,
-  Spinner,
   TxStatus,
 } from "@/components/ui";
 
@@ -109,7 +109,7 @@ export function AuditForm({ onAudited }: { onAudited?: (id: bigint) => void }) {
       <Card>
         <CardHeader
           title="Audit a contract"
-          subtitle="Paste Solidity. The on-chain AI returns a security report."
+          subtitle="Paste Solidity. The AI returns a security report on chain."
           action={
             feeQ.data !== undefined ? (
               <span className="text-xs text-zinc-400">
@@ -122,7 +122,7 @@ export function AuditForm({ onAudited }: { onAudited?: (id: bigint) => void }) {
           <RitualWalletPanel status={wallet} onDeposited={wallet.refetch} />
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            <Field label="Solidity code" hint="Pasted code is stored on-chain with the audit.">
+            <Field label="Solidity code" hint="Your code is stored on chain with the audit.">
               <Textarea
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
@@ -165,12 +165,13 @@ export function AuditForm({ onAudited }: { onAudited?: (id: bigint) => void }) {
       {waitingForAI && (
         <Card>
           <CardBody>
-            <div className="flex items-center gap-2 text-sm text-zinc-300">
-              <Spinner /> AI is analyzing the contract on-chain (audit #{pendingId?.toString()})…
+            <div className="flex items-center gap-3 text-sm text-zinc-200">
+              <RitualMark size={22} className="animate-spin-slow text-green-400" />
+              AI is analyzing the contract on chain (audit #{pendingId?.toString()})…
             </div>
             <p className="mt-2 text-xs text-zinc-500">
-              The Ritual LLM precompile runs the model inside a TEE; the report appears here once
-              the async inference settles.
+              The Ritual LLM precompile runs the model inside a TEE. The report shows up here once
+              the inference settles.
             </p>
           </CardBody>
         </Card>

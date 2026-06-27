@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title  BountyJudge — commit-reveal bounty system with AI-assisted judging
+/// @title  BountyJudge - commit-reveal bounty system with AI-assisted judging
 /// @notice Answers stay hidden (stored only as commitment hashes) during the
 ///         submission phase, so participants cannot read and "improve on" a
 ///         rival's answer before the deadline. Answers become checkable only
@@ -103,7 +103,7 @@ contract BountyJudge {
         emit BountyCreated(bountyId, msg.sender, submissionDeadline, revealDeadline);
     }
 
-    /// @notice Phase 1 — submit ONLY a commitment hash. The answer stays hidden.
+    /// @notice Phase 1 - submit ONLY a commitment hash. The answer stays hidden.
     function submitCommitment(uint256 bountyId, bytes32 commitment) external {
         Bounty storage b = _bounties[bountyId];
         if (!b.exists) revert BountyMissing();
@@ -119,7 +119,7 @@ contract BountyJudge {
         emit CommitmentSubmitted(bountyId, msg.sender, commitment);
     }
 
-    /// @notice Phase 2 — reveal answer + salt. Must reproduce the original commitment.
+    /// @notice Phase 2 - reveal answer + salt. Must reproduce the original commitment.
     function revealAnswer(uint256 bountyId, string calldata answer, bytes32 salt) external {
         Bounty storage b = _bounties[bountyId];
         if (!b.exists) revert BountyMissing();
@@ -139,7 +139,7 @@ contract BountyJudge {
         emit AnswerRevealed(bountyId, msg.sender);
     }
 
-    /// @notice Phase 3 — lock in the batch of revealed answers handed to the AI judge.
+    /// @notice Phase 3 - lock in the batch of revealed answers handed to the AI judge.
     /// @dev Only the creator can judge, and only after the reveal window closes.
     ///      `llmInput` is the exact byte payload sent to the LLM for BATCH judging
     ///      (one call for all answers, not one call per answer). We store its hash
@@ -165,7 +165,7 @@ contract BountyJudge {
         emit Judged(bountyId, b.judgeInputHash, revealedCount);
     }
 
-    /// @notice Phase 4 — record the winning submission. Winner must have revealed.
+    /// @notice Phase 4 - record the winning submission. Winner must have revealed.
     function finalizeWinner(uint256 bountyId, uint256 winnerIndex) external {
         Bounty storage b = _bounties[bountyId];
         if (!b.exists) revert BountyMissing();
@@ -189,7 +189,7 @@ contract BountyJudge {
 
     /// @notice Build a commitment exactly the way the contract verifies it.
     /// @dev Call OFF-CHAIN (eth_call). Never broadcast your answer in a tx during
-    ///      the submission phase — that would defeat the whole point.
+    ///      the submission phase - that would defeat the whole point.
     function computeCommitment(
         string calldata answer,
         bytes32 salt,

@@ -71,7 +71,7 @@ export function RitualWalletPanel({
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-100">
           <p className="font-semibold text-amber-200">RitualWallet funding required</p>
           <p className="mt-1 text-amber-100/80">
-            To run AI judging, your wallet needs prepaid RITUAL locked in RitualWallet.
+            To run an AI audit, your wallet needs prepaid RITUAL locked in RitualWallet.
           </p>
           <dl className="mt-2 space-y-0.5 font-mono text-[11px] text-amber-100/90">
             <div className="flex justify-between gap-3">
@@ -101,7 +101,7 @@ export function RitualWalletPanel({
       {ready && (
         <Notice tone="green">
           RitualWallet funded ({formatEther(balance ?? 0n)} RITUAL, locked until block{" "}
-          {(lockUntil ?? 0n).toString()}). You can run AI judging.
+          {(lockUntil ?? 0n).toString()}). You can run audits.
         </Notice>
       )}
     </div>
