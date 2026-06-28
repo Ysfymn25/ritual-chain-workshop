@@ -46,7 +46,7 @@ export function buildAuditLlmInput(code: string): `0x${string}` {
     0n, // frequencyPenalty
     "", // logitBiasJson
     false, // logprobs
-    1024n, // maxCompletionTokens
+    8192n, // maxCompletionTokens (Ritual requires >= 4096)
     "", // metadataJson
     "", // modalitiesJson
     1n, // n

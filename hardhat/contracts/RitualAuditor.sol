@@ -80,9 +80,13 @@ contract RitualAuditor is PrecompileConsumer {
     }
 
     /// @notice Submit a Solidity snippet for an AI security audit.
-    /// @dev    Pay at least `auditFee` in the native token; it is forwarded to
-    ///         TREASURY. The LLM precompile runs the model and returns findings
-    ///         in this same transaction.
+    /// @dev    Pay at least `auditFee` in the native token. The fee is kept in the
+    ///         contract (owner withdraws it via `withdraw`); we deliberately do NOT
+    ///         make an external transfer before the async LLM precompile call, since
+    ///         a value-bearing external call in the same transaction stops the async
+    ///         precompile result from settling. The model runs in the TEE and the
+    ///         report is stored without reverting on a model error, so the async
+    ///         transaction always settles.
     /// @param code      The source to audit (also stored on-chain for the record).
     /// @param llmInput  ABI-encoded LLM request built off-chain; it embeds `code`
     ///                  and the auditor system prompt and selects the model.
@@ -104,13 +108,7 @@ contract RitualAuditor is PrecompileConsumer {
         a.timestamp = block.timestamp;
 
         emit AuditRequested(auditId, msg.sender);
-
-        // Forward the usage fee (native Ritual token) to the treasury wallet.
-        if (msg.value > 0) {
-            (bool paid, ) = payable(TREASURY).call{value: msg.value}("");
-            require(paid, "fee transfer failed");
-            emit FeePaid(auditId, msg.sender, msg.value);
-        }
+        emit FeePaid(auditId, msg.sender, msg.value); // fee accrues in-contract
 
         // Call the LLM inference precompile. PrecompileConsumer unwraps the
         // short-running async envelope and returns the actual encoded output.
@@ -124,12 +122,18 @@ contract RitualAuditor is PrecompileConsumer {
 
         ) = abi.decode(output, (bool, bytes, bytes, string, ConvoHistory));
 
-        require(!hasError, errorMessage);
-
-        a.report = string(completionData);
-        a.completed = true;
+        // Store the result either way so the async tx always settles.
+        a.report = hasError ? string(abi.encodePacked("ERROR: ", errorMessage)) : string(completionData);
+        a.completed = !hasError;
 
         emit AuditCompleted(auditId, a.report);
+    }
+
+    /// @notice Owner sweeps accrued audit fees to the treasury wallet.
+    function withdraw() external onlyOwner {
+        uint256 amount = address(this).balance;
+        (bool ok, ) = payable(TREASURY).call{value: amount}("");
+        require(ok, "withdraw failed");
     }
 
     function getAudit(uint256 auditId)
