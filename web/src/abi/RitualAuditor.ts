@@ -3,7 +3,7 @@ import type { Address } from "viem";
 /** Deployed RitualAuditor (Ritual testnet). Overridable via env. */
 export const RITUAL_AUDITOR: Address =
   (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS?.trim() as Address | undefined) ??
-  "0x950b7943A5b2E3C4F477463892ADAC250cfcE56b";
+  "0xa17adc506961d40413239ebdd349c82590cd482e";
 
 export const ritualAuditorAbi = [
   {
